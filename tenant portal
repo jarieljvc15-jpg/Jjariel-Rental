@@ -1,0 +1,995 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#2563eb">
+<title>JJ Apartment — Tenant Portal</title>
+<style>
+  *,*::before,*::after { box-sizing: border-box; }
+  :root {
+    --bg: #f5f7fa;
+    --card: #ffffff;
+    --border: #e5e7eb;
+    --text: #111827;
+    --muted: #6b7280;
+    --primary: #2563eb;
+    --primary-dark: #1e40af;
+    --success: #16a34a;
+    --warn: #d97706;
+    --danger: #dc2626;
+    --soft-blue: #eff6ff;
+    --soft-green: #f0fdf4;
+    --soft-red: #fef2f2;
+    --soft-amber: #fffbeb;
+    --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-lg: 0 12px 30px rgba(0,0,0,0.14);
+    --radius: 14px;
+    --radius-sm: 10px;
+    --safe-bot: 28px;
+  }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-size: 15px;
+    line-height: 1.45;
+    -webkit-font-smoothing: antialiased;
+    overscroll-behavior-y: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    padding-bottom: calc(var(--safe-bot) + env(safe-area-inset-bottom));
+  }
+  .app {
+    max-width: 540px; margin: 0 auto;
+    min-height: 100vh;
+    background: var(--bg);
+    display: flex; flex-direction: column;
+  }
+
+  /* Header */
+  .header {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: #fff;
+    padding: 16px 16px 14px;
+    padding-top: calc(16px + env(safe-area-inset-top));
+    box-shadow: var(--shadow);
+    position: sticky; top: 0; z-index: 30;
+  }
+  .header h1 { margin: 0; font-size: 18px; font-weight: 700; letter-spacing: 0.2px; }
+  .header .sub { font-size: 12px; opacity: 0.85; margin-top: 2px; }
+  .header-row { display: flex; align-items: center; gap: 10px; }
+  .back-btn {
+    background: rgba(255,255,255,0.18); border: none; color: #fff;
+    width: 38px; height: 38px; border-radius: 50%; cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 18px; font-weight: 700; flex-shrink: 0;
+  }
+  .back-btn:active { transform: scale(0.94); filter: brightness(0.92); }
+  .back-btn.hidden { visibility: hidden; }
+
+  /* Stepper */
+  .stepper {
+    display: flex; gap: 6px; padding: 12px 16px; background: #fff;
+    border-bottom: 1px solid var(--border);
+  }
+  .step-dot {
+    flex: 1; height: 4px; background: #e5e7eb; border-radius: 2px;
+    transition: background 0.2s;
+  }
+  .step-dot.active { background: var(--primary); }
+  .step-dot.done { background: var(--success); }
+
+  /* Screens */
+  .screen { display: none; padding: 18px 16px 30px; flex: 1; }
+  .screen.active { display: block; animation: fadeIn 0.18s ease-out; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+  .screen-title {
+    font-size: 22px; font-weight: 700; margin: 4px 0 4px;
+  }
+  .screen-sub { color: var(--muted); font-size: 14px; margin-bottom: 20px; }
+
+  /* Cards */
+  .card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 16px;
+    box-shadow: var(--shadow);
+  }
+
+  /* Buttons */
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    gap: 8px; width: 100%; min-height: 56px;
+    background: var(--primary); color: #fff; border: none;
+    border-radius: var(--radius-sm); font-size: 17px; font-weight: 600;
+    cursor: pointer; padding: 0 16px;
+    transition: transform 0.06s ease;
+  }
+  .btn:active { transform: scale(0.94); filter: brightness(0.92); }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; filter: none; }
+  .btn.secondary { background: #fff; color: var(--text); border: 1px solid var(--border); }
+  .btn.success { background: var(--success); }
+  .btn.danger { background: var(--danger); }
+  .btn-row { display: flex; gap: 10px; }
+  .btn-row .btn { flex: 1; }
+
+  /* Floating bottom action bar */
+  .footer-bar {
+    position: sticky; bottom: 0;
+    background: linear-gradient(to top, #f5f7fa 65%, rgba(245,247,250,0));
+    padding: 18px 16px calc(var(--safe-bot) + env(safe-area-inset-bottom));
+    margin-top: auto;
+  }
+
+  /* Unit selection pills */
+  .unit-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+  }
+  .unit-pill {
+    background: #fff; border: 2px solid var(--border);
+    border-radius: var(--radius); padding: 18px 6px;
+    font-size: 18px; font-weight: 700;
+    cursor: pointer; text-align: center;
+    transition: transform 0.06s, border-color 0.15s;
+  }
+  .unit-pill:active { transform: scale(0.94); filter: brightness(0.92); }
+  .unit-pill.selected { border-color: var(--primary); background: var(--soft-blue); color: var(--primary); }
+
+  /* PIN pad */
+  .pin-dots {
+    display: flex; justify-content: center; gap: 16px;
+    margin: 8px 0 24px;
+  }
+  .pin-dot {
+    width: 18px; height: 18px; border-radius: 50%;
+    border: 2px solid #cbd5e1; background: transparent;
+    transition: background 0.12s, border-color 0.12s, transform 0.08s;
+  }
+  .pin-dot.filled { background: var(--primary); border-color: var(--primary); transform: scale(1.05); }
+  .pin-dot.error { border-color: var(--danger); background: var(--soft-red); animation: shake 0.35s; }
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-6px); }
+    75% { transform: translateX(6px); }
+  }
+  .pin-pad {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+    max-width: 320px; margin: 0 auto;
+  }
+  .pin-key {
+    background: #fff; border: 1px solid var(--border);
+    border-radius: var(--radius); height: 68px;
+    font-size: 26px; font-weight: 600;
+    color: var(--text); cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: var(--shadow);
+    user-select: none; -webkit-user-select: none;
+  }
+  .pin-key:active { transform: scale(0.92); filter: brightness(0.92); }
+  .pin-key.action {
+    background: transparent; box-shadow: none; border: none;
+    color: var(--muted); font-size: 14px; font-weight: 600;
+  }
+  .pin-key.del { font-size: 22px; }
+  .pin-key[disabled] { opacity: 0.4; pointer-events: none; }
+
+  .pin-warning {
+    background: var(--soft-amber); color: var(--warn);
+    border: 1px solid #fed7aa; border-radius: var(--radius-sm);
+    padding: 10px 12px; font-size: 13px; font-weight: 600;
+    text-align: center; margin-bottom: 14px;
+  }
+  .pin-error {
+    background: var(--soft-red); color: var(--danger);
+    border: 1px solid #fecaca; border-radius: var(--radius-sm);
+    padding: 10px 12px; font-size: 13px; font-weight: 600;
+    text-align: center; margin-bottom: 14px;
+  }
+
+  /* Calculator amount input */
+  .amount-display {
+    background: #fff; border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 28px 18px;
+    text-align: center; margin-bottom: 18px;
+    box-shadow: var(--shadow);
+  }
+  .amount-display .lbl { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.6px; font-weight: 600; }
+  .amount-display .val {
+    font-size: 40px; font-weight: 700; margin-top: 4px;
+    font-variant-numeric: tabular-nums;
+  }
+  .amount-display .val.zero { color: var(--muted); }
+
+  /* Mode pills */
+  .mode-grid {
+    display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;
+    margin-bottom: 14px;
+  }
+  .mode-pill {
+    background: #fff; border: 2px solid var(--border);
+    border-radius: var(--radius-sm); padding: 14px 8px;
+    font-size: 14px; font-weight: 600; cursor: pointer;
+    text-align: center;
+  }
+  .mode-pill:active { transform: scale(0.94); filter: brightness(0.92); }
+  .mode-pill.selected { border-color: var(--primary); background: var(--soft-blue); color: var(--primary); }
+
+  /* Form fields */
+  .field { margin-bottom: 14px; }
+  .field label {
+    display: block; font-size: 13px; font-weight: 600;
+    color: var(--muted); margin-bottom: 6px;
+  }
+  .input, select.input, textarea.input {
+    width: 100%; min-height: 50px; padding: 12px 14px;
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    font-size: 16px; background: #fff; color: var(--text);
+    font-family: inherit;
+  }
+  .input:focus { outline: 2px solid var(--primary); outline-offset: -1px; border-color: var(--primary); }
+  textarea.input { min-height: 70px; resize: vertical; }
+
+  .photo-btn {
+    width: 100%; min-height: 56px; background: #fff;
+    border: 2px dashed var(--border); border-radius: var(--radius);
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    font-size: 15px; color: var(--muted); cursor: pointer;
+    padding: 12px;
+  }
+  .photo-btn:active { transform: scale(0.97); }
+  .photo-btn.has-photo { border-style: solid; border-color: var(--success); color: var(--success); background: var(--soft-green); }
+  .photo-preview {
+    width: 100%; max-height: 200px; object-fit: contain;
+    margin-top: 10px; border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+  }
+  #pfPhoto { display: none; }
+
+  /* Review summary */
+  .summary-row {
+    display: flex; justify-content: space-between; padding: 10px 0;
+    border-bottom: 1px solid var(--border); font-size: 14px;
+  }
+  .summary-row:last-child { border-bottom: none; }
+  .summary-row .lbl { color: var(--muted); }
+  .summary-row .val { font-weight: 600; text-align: right; max-width: 60%; word-break: break-word; }
+  .summary-total {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 14px 0 6px; margin-top: 6px;
+    border-top: 2px solid var(--text);
+    font-size: 18px; font-weight: 700;
+  }
+  .summary-total .val { color: var(--primary); }
+
+  /* Success */
+  .success-icon {
+    width: 88px; height: 88px; border-radius: 50%;
+    background: var(--soft-green); display: flex; align-items: center; justify-content: center;
+    margin: 30px auto 16px; font-size: 44px;
+    animation: pop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  @keyframes pop { from { transform: scale(0); } to { transform: scale(1); } }
+  .ref-box {
+    background: #fff; border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 16px; margin: 16px 0; text-align: center;
+    box-shadow: var(--shadow);
+  }
+  .ref-box .lbl { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.6px; font-weight: 600; }
+  .ref-box .ref {
+    font-family: "SF Mono", Menlo, monospace;
+    font-size: 14px; font-weight: 700; margin-top: 4px;
+    word-break: break-all;
+  }
+
+  /* Locked screen */
+  .lock-card {
+    text-align: center; padding: 30px 18px;
+    background: var(--soft-red); border: 1px solid #fecaca; border-radius: var(--radius);
+    margin: 30px 0 16px;
+  }
+  .lock-card .ic { font-size: 50px; }
+  .lock-card h2 { margin: 8px 0 6px; font-size: 20px; color: var(--danger); }
+  .lock-card p { color: var(--text); font-size: 14px; margin: 4px 0; }
+  .lock-card .phone {
+    display: inline-block; margin-top: 10px;
+    font-size: 16px; font-weight: 700; color: var(--primary);
+    text-decoration: none;
+  }
+
+  /* Spinner */
+  .spinner {
+    display: inline-block; width: 16px; height: 16px;
+    border: 2px solid #fff; border-top-color: transparent;
+    border-radius: 50%; animation: spin 0.7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Toast */
+  .toast {
+    position: fixed; left: 50%; bottom: calc(20px + env(safe-area-inset-bottom));
+    transform: translateX(-50%);
+    background: #111; color: #fff;
+    padding: 12px 18px; border-radius: 999px;
+    font-size: 14px; font-weight: 500;
+    z-index: 300; opacity: 0; pointer-events: none;
+    transition: opacity 0.2s, transform 0.2s;
+    max-width: 90%; text-align: center;
+    box-shadow: var(--shadow-lg);
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(-4px); }
+  .toast.success { background: var(--success); }
+  .toast.error { background: var(--danger); }
+
+  .empty { text-align: center; padding: 30px 14px; color: var(--muted); font-size: 14px; }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="header">
+    <div class="header-row">
+      <button class="back-btn hidden" id="backBtn" onclick="goBack()">‹</button>
+      <div>
+        <h1 id="hdrTitle">JJ Apartment</h1>
+        <div class="sub" id="hdrSub">Tenant Payment Portal</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="stepper" id="stepper">
+    <div class="step-dot active" data-step="1"></div>
+    <div class="step-dot" data-step="2"></div>
+    <div class="step-dot" data-step="3"></div>
+    <div class="step-dot" data-step="4"></div>
+  </div>
+
+  <!-- SCREEN 1: SELECT UNIT -->
+  <div class="screen active" id="screen-unit">
+    <div class="screen-title">Select your unit</div>
+    <div class="screen-sub">Tap your apartment unit number to begin.</div>
+    <div id="unitGrid" class="unit-grid">
+      <div class="empty" style="grid-column: 1 / -1;">Loading units…</div>
+    </div>
+  </div>
+
+  <!-- SCREEN 2: PIN ENTRY -->
+  <div class="screen" id="screen-pin">
+    <div class="screen-title">Enter your PIN</div>
+    <div class="screen-sub" id="pinSubtitle">Enter the 4-digit PIN for Unit —</div>
+
+    <div id="pinWarn"></div>
+
+    <div class="pin-dots" id="pinDots">
+      <div class="pin-dot" data-idx="0"></div>
+      <div class="pin-dot" data-idx="1"></div>
+      <div class="pin-dot" data-idx="2"></div>
+      <div class="pin-dot" data-idx="3"></div>
+    </div>
+
+    <div class="pin-pad" id="pinPad">
+      <button class="pin-key" data-key="1">1</button>
+      <button class="pin-key" data-key="2">2</button>
+      <button class="pin-key" data-key="3">3</button>
+      <button class="pin-key" data-key="4">4</button>
+      <button class="pin-key" data-key="5">5</button>
+      <button class="pin-key" data-key="6">6</button>
+      <button class="pin-key" data-key="7">7</button>
+      <button class="pin-key" data-key="8">8</button>
+      <button class="pin-key" data-key="9">9</button>
+      <button class="pin-key action" data-key="clear">Clear</button>
+      <button class="pin-key" data-key="0">0</button>
+      <button class="pin-key del" data-key="del">⌫</button>
+    </div>
+
+    <div id="pinSpinnerWrap" style="text-align:center;margin-top:18px;display:none;color:var(--muted);font-size:13px;">
+      <span class="spinner" style="border-color: var(--muted); border-top-color: transparent;"></span>
+      &nbsp; Verifying…
+    </div>
+  </div>
+
+  <!-- SCREEN: LOCKED -->
+  <div class="screen" id="screen-locked">
+    <div class="lock-card">
+      <div class="ic">🔒</div>
+      <h2>Locked</h2>
+      <p>Too many incorrect PIN attempts.</p>
+      <p>Contact your property manager.</p>
+      <a id="lockedPhone" class="phone" href="tel:">📞 —</a>
+    </div>
+    <button class="btn secondary" onclick="resetWizard()">Start Over</button>
+  </div>
+
+  <!-- SCREEN 3: PAYMENT DETAILS -->
+  <div class="screen" id="screen-pay">
+    <div class="screen-title">Payment details</div>
+    <div class="screen-sub" id="paySub">Unit —</div>
+
+    <div class="amount-display">
+      <div class="lbl">Amount to pay</div>
+      <div class="val zero" id="amtDisplay">₱0</div>
+    </div>
+
+    <div class="pin-pad" id="amtPad" style="margin-bottom:18px;">
+      <button class="pin-key" data-amt="1">1</button>
+      <button class="pin-key" data-amt="2">2</button>
+      <button class="pin-key" data-amt="3">3</button>
+      <button class="pin-key" data-amt="4">4</button>
+      <button class="pin-key" data-amt="5">5</button>
+      <button class="pin-key" data-amt="6">6</button>
+      <button class="pin-key" data-amt="7">7</button>
+      <button class="pin-key" data-amt="8">8</button>
+      <button class="pin-key" data-amt="9">9</button>
+      <button class="pin-key action" data-amt="clear">Clear</button>
+      <button class="pin-key" data-amt="0">0</button>
+      <button class="pin-key del" data-amt="del">⌫</button>
+    </div>
+
+    <div class="field">
+      <label>Payment method</label>
+      <div class="mode-grid" id="modeGrid">
+        <div class="mode-pill selected" data-mode="GCash">GCash</div>
+        <div class="mode-pill" data-mode="Bank Transfer">Bank Transfer</div>
+        <div class="mode-pill" data-mode="Maya">Maya</div>
+        <div class="mode-pill" data-mode="Cash">Cash</div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>For month</label>
+      <input class="input" type="month" id="payMonth">
+    </div>
+
+    <div class="field">
+      <label>Notes (optional)</label>
+      <textarea class="input" id="payNotes" placeholder="Reference number, message, etc."></textarea>
+    </div>
+
+    <div class="field">
+      <label>Proof of payment</label>
+      <label class="photo-btn" id="photoLabel" for="pfPhoto">
+        <span id="photoBtnText">📷  Take/upload photo</span>
+      </label>
+      <input id="pfPhoto" type="file" accept="image/*" capture="environment" onchange="onPhotoChosen(event)">
+      <img id="photoPreview" class="photo-preview" style="display:none;">
+    </div>
+
+    <div class="footer-bar">
+      <button class="btn" id="payNextBtn" onclick="goReview()">Continue to Review</button>
+    </div>
+  </div>
+
+  <!-- SCREEN 4: REVIEW -->
+  <div class="screen" id="screen-review">
+    <div class="screen-title">Review and submit</div>
+    <div class="screen-sub">Please confirm before submitting.</div>
+
+    <div class="card">
+      <div class="summary-row"><span class="lbl">Unit</span><span class="val" id="rvUnit">—</span></div>
+      <div class="summary-row"><span class="lbl">Tenant</span><span class="val" id="rvName">—</span></div>
+      <div class="summary-row"><span class="lbl">Payment method</span><span class="val" id="rvMode">—</span></div>
+      <div class="summary-row"><span class="lbl">For month</span><span class="val" id="rvMonth">—</span></div>
+      <div class="summary-row" id="rvNotesRow" style="display:none;"><span class="lbl">Notes</span><span class="val" id="rvNotes">—</span></div>
+      <div class="summary-row" id="rvPhotoRow" style="display:none;"><span class="lbl">Proof</span><span class="val" style="color:var(--success);">✓ Photo attached</span></div>
+      <div class="summary-total"><span>Total</span><span class="val" id="rvTotal">₱0</span></div>
+    </div>
+
+    <div style="height:14px;"></div>
+    <div style="font-size:12px;color:var(--muted);text-align:center;line-height:1.5;">
+      Your submission will be reviewed by the property manager.<br>
+      You will receive a confirmation once it's verified.
+    </div>
+
+    <div class="footer-bar">
+      <button class="btn success" id="submitBtn" onclick="submitPayment()">Submit Payment</button>
+    </div>
+  </div>
+
+  <!-- SCREEN 5: SUCCESS -->
+  <div class="screen" id="screen-success">
+    <div class="success-icon">✓</div>
+    <div class="screen-title" style="text-align:center;">Submitted!</div>
+    <div class="screen-sub" style="text-align:center;">Your payment is awaiting verification.</div>
+
+    <div class="ref-box">
+      <div class="lbl">Reference ID</div>
+      <div class="ref" id="successRef">—</div>
+    </div>
+
+    <div class="card">
+      <div class="summary-row"><span class="lbl">Unit</span><span class="val" id="okUnit">—</span></div>
+      <div class="summary-row"><span class="lbl">Amount</span><span class="val" id="okAmt">—</span></div>
+      <div class="summary-row"><span class="lbl">Method</span><span class="val" id="okMode">—</span></div>
+    </div>
+
+    <div style="height:18px;"></div>
+    <div class="btn-row">
+      <button class="btn secondary" onclick="resetWizard()">Done</button>
+      <button class="btn" onclick="submitAnother()">Submit Another</button>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ============================================================================
+// CONFIG / STATE
+// ============================================================================
+const API_URL = window.location.href.split('?')[0];
+
+let state = {
+  step: 1,                      // 1=unit, 2=pin, 3=pay, 4=review, 5=success, locked=lock
+  units: [],
+  selectedUnit: '',
+  pin: '',
+  tenant: null,                 // { tenantId, name, unit, rentAmount, balance }
+  amount: 0,
+  mode: 'GCash',
+  month: '',
+  notes: '',
+  photoFile: null,
+  photoBase64: null,
+  property: { name: 'JJ Apartment', phone: '' },
+  pinWrongAttempts: 0,
+  history: []                   // navigation stack of screens
+};
+
+const SCREENS = {
+  unit:    { el: 'screen-unit',    stepIdx: 1, back: null },
+  pin:     { el: 'screen-pin',     stepIdx: 2, back: 'unit' },
+  pay:     { el: 'screen-pay',     stepIdx: 3, back: null },   // can't go back after auth
+  review:  { el: 'screen-review',  stepIdx: 4, back: 'pay' },
+  success: { el: 'screen-success', stepIdx: 4, back: null },
+  locked:  { el: 'screen-locked',  stepIdx: 2, back: null }
+};
+
+// ============================================================================
+// API
+// ============================================================================
+function apiGet(action, params) {
+  const qs = new URLSearchParams(Object.assign({ action }, params || {})).toString();
+  return fetch(API_URL + '?' + qs, { method: 'GET' })
+    .then(r => r.json())
+    .catch(e => ({ ok: false, error: e.message }));
+}
+function apiPost(body) {
+  return fetch(API_URL, {
+    method: 'POST',
+    body: JSON.stringify(body),
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+  }).then(r => r.json()).catch(e => ({ ok: false, error: e.message }));
+}
+
+// ============================================================================
+// UTILITIES
+// ============================================================================
+function peso(n) {
+  const v = Number(n) || 0;
+  if (v === Math.floor(v)) {
+    return '₱' + v.toLocaleString('en-PH');
+  }
+  return '₱' + v.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+function thisMonthStr() {
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+}
+function esc(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+function toast(msg, kind) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show ' + (kind || '');
+  clearTimeout(t._tm);
+  t._tm = setTimeout(() => { t.className = 'toast'; }, 2600);
+}
+function fileToBase64(file) {
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = () => {
+      const s = r.result;
+      const idx = s.indexOf(',');
+      res(idx === -1 ? s : s.substring(idx + 1));
+    };
+    r.onerror = () => rej(new Error('File read failed'));
+    r.readAsDataURL(file);
+  });
+}
+
+// ============================================================================
+// NAVIGATION
+// ============================================================================
+function goScreen(name) {
+  const def = SCREENS[name];
+  if (!def) return;
+  document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
+  document.getElementById(def.el).classList.add('active');
+
+  // Stepper
+  document.querySelectorAll('#stepper .step-dot').forEach((d, i) => {
+    d.classList.remove('active', 'done');
+    const stepNum = i + 1;
+    if (stepNum < def.stepIdx) d.classList.add('done');
+    else if (stepNum === def.stepIdx) d.classList.add('active');
+  });
+  document.getElementById('stepper').style.display =
+    (name === 'success' || name === 'locked') ? 'none' : 'flex';
+
+  // Back button
+  document.getElementById('backBtn').classList.toggle('hidden', !def.back);
+
+  // Push to history (avoid duplicate adjacent entries)
+  if (state.history[state.history.length - 1] !== name) {
+    state.history.push(name);
+  }
+  state.step = name;
+  window.scrollTo(0, 0);
+}
+function goBack() {
+  const def = SCREENS[state.step];
+  if (def && def.back) {
+    state.history.pop(); // pop current
+    goScreen(def.back);
+  }
+}
+
+function resetWizard() {
+  state.selectedUnit = '';
+  state.pin = '';
+  state.tenant = null;
+  state.amount = 0;
+  state.mode = 'GCash';
+  state.month = thisMonthStr();
+  state.notes = '';
+  state.photoFile = null;
+  state.photoBase64 = null;
+  state.pinWrongAttempts = 0;
+  state.history = [];
+  document.getElementById('payNotes').value = '';
+  document.getElementById('payMonth').value = state.month;
+  document.getElementById('pfPhoto').value = '';
+  document.getElementById('photoPreview').style.display = 'none';
+  document.getElementById('photoLabel').classList.remove('has-photo');
+  document.getElementById('photoBtnText').textContent = '📷  Take/upload photo';
+  renderAmount();
+  renderModePills();
+  renderUnitGrid();
+  goScreen('unit');
+}
+
+function submitAnother() {
+  // Keep PIN-validated session: reuse same tenant, just clear payment details.
+  state.amount = 0;
+  state.notes = '';
+  state.photoFile = null;
+  state.photoBase64 = null;
+  document.getElementById('payNotes').value = '';
+  document.getElementById('pfPhoto').value = '';
+  document.getElementById('photoPreview').style.display = 'none';
+  document.getElementById('photoLabel').classList.remove('has-photo');
+  document.getElementById('photoBtnText').textContent = '📷  Take/upload photo';
+  renderAmount();
+  goScreen('pay');
+}
+
+// ============================================================================
+// SCREEN 1: UNITS
+// ============================================================================
+function loadUnits() {
+  apiGet('getUnits').then(r => {
+    if (!r.ok) { toast('Failed to load units', 'error'); return; }
+    state.units = r.units || [];
+    renderUnitGrid();
+  });
+}
+function renderUnitGrid() {
+  const wrap = document.getElementById('unitGrid');
+  if (!state.units || state.units.length === 0) {
+    wrap.innerHTML = '<div class="empty" style="grid-column: 1 / -1;">No active units.</div>';
+    return;
+  }
+  wrap.innerHTML = state.units.map(u => {
+    const sel = u === state.selectedUnit ? ' selected' : '';
+    return `<button class="unit-pill${sel}" onclick="selectUnit('${esc(u)}')">${esc(u)}</button>`;
+  }).join('');
+}
+function selectUnit(u) {
+  state.selectedUnit = u;
+  renderUnitGrid();
+  // Immediately advance to PIN screen
+  setTimeout(() => {
+    state.pin = '';
+    state.pinWrongAttempts = 0;
+    document.getElementById('pinSubtitle').textContent = 'Enter the 4-digit PIN for Unit ' + u;
+    document.getElementById('pinWarn').innerHTML = '';
+    renderPinDots();
+    goScreen('pin');
+  }, 120);
+}
+
+// ============================================================================
+// SCREEN 2: PIN
+// ============================================================================
+function renderPinDots(errorFlash) {
+  document.querySelectorAll('#pinDots .pin-dot').forEach((d, i) => {
+    d.classList.remove('filled', 'error');
+    if (i < state.pin.length) d.classList.add('filled');
+    if (errorFlash) d.classList.add('error');
+  });
+}
+function setPinPadDisabled(disabled) {
+  document.querySelectorAll('#pinPad .pin-key').forEach(b => {
+    if (disabled) b.setAttribute('disabled', 'disabled');
+    else b.removeAttribute('disabled');
+  });
+}
+function onPinKey(key) {
+  if (key === 'del') {
+    state.pin = state.pin.slice(0, -1);
+    renderPinDots();
+    return;
+  }
+  if (key === 'clear') {
+    state.pin = '';
+    renderPinDots();
+    return;
+  }
+  if (state.pin.length >= 4) return;
+  state.pin += String(key);
+  renderPinDots();
+  if (state.pin.length === 4) {
+    setTimeout(verifyPin, 120);
+  }
+}
+function verifyPin() {
+  setPinPadDisabled(true);
+  document.getElementById('pinSpinnerWrap').style.display = 'block';
+  apiPost({
+    action: 'validateTenantAccess',
+    unit: state.selectedUnit,
+    pin: state.pin
+  }).then(r => {
+    document.getElementById('pinSpinnerWrap').style.display = 'none';
+    setPinPadDisabled(false);
+    if (r.ok) {
+      state.tenant = {
+        tenantId: r.tenantId,
+        name: r.name,
+        unit: r.unit,
+        rentAmount: r.rentAmount,
+        balance: r.balance
+      };
+      // Pre-fill: if balance > 0, use balance; else use rent
+      const suggested = (r.balance && r.balance > 0) ? r.balance : (r.rentAmount || 0);
+      state.amount = Math.round(suggested);
+      state.month = thisMonthStr();
+      document.getElementById('payMonth').value = state.month;
+      document.getElementById('paySub').textContent = 'Unit ' + state.tenant.unit + ' · ' + state.tenant.name;
+      renderAmount();
+      renderModePills();
+      goScreen('pay');
+      return;
+    }
+
+    // PIN was wrong
+    state.pin = '';
+    if (r.locked) {
+      showLocked();
+      return;
+    }
+
+    renderPinDots(true);
+    setTimeout(() => renderPinDots(false), 400);
+
+    state.pinWrongAttempts++;
+    const remaining = typeof r.attemptsRemaining === 'number' ? r.attemptsRemaining : null;
+
+    if (remaining !== null && remaining <= 2 && remaining > 0) {
+      document.getElementById('pinWarn').innerHTML =
+        '<div class="pin-warning">⚠️ ' + remaining + ' attempt' + (remaining === 1 ? '' : 's') +
+        ' remaining before 30min lockout</div>';
+    } else {
+      document.getElementById('pinWarn').innerHTML =
+        '<div class="pin-error">' + esc(r.error || 'Invalid PIN') + '</div>';
+    }
+  });
+}
+function showLocked() {
+  document.getElementById('lockedPhone').textContent = '📞 ' + (state.property.phone || 'your property manager');
+  document.getElementById('lockedPhone').href = state.property.phone ? ('tel:' + state.property.phone) : '#';
+  goScreen('locked');
+}
+
+// ============================================================================
+// SCREEN 3: PAYMENT DETAILS
+// ============================================================================
+function renderAmount() {
+  const el = document.getElementById('amtDisplay');
+  el.textContent = peso(state.amount);
+  el.classList.toggle('zero', !state.amount);
+}
+function onAmtKey(key) {
+  if (key === 'del') {
+    state.amount = Math.floor(state.amount / 10);
+    renderAmount();
+    return;
+  }
+  if (key === 'clear') {
+    state.amount = 0;
+    renderAmount();
+    return;
+  }
+  // Calculator-style integer entry. Max 7 digits = ₱9,999,999 — sane upper bound.
+  const digits = String(state.amount);
+  if (digits === '0' || digits.length < 7) {
+    const next = (state.amount === 0 ? '' : digits) + String(key);
+    state.amount = parseInt(next, 10) || 0;
+    renderAmount();
+  }
+}
+function renderModePills() {
+  document.querySelectorAll('#modeGrid .mode-pill').forEach(p => {
+    p.classList.toggle('selected', p.dataset.mode === state.mode);
+  });
+}
+function onPhotoChosen(ev) {
+  const f = ev.target.files && ev.target.files[0];
+  if (!f) return;
+  if (f.size > 10 * 1024 * 1024) {
+    toast('Photo too large (max 10 MB)', 'error');
+    ev.target.value = '';
+    return;
+  }
+  state.photoFile = f;
+  const preview = document.getElementById('photoPreview');
+  preview.src = URL.createObjectURL(f);
+  preview.style.display = 'block';
+  document.getElementById('photoLabel').classList.add('has-photo');
+  document.getElementById('photoBtnText').textContent = '✓  Photo attached — tap to change';
+}
+
+function goReview() {
+  if (!state.amount || state.amount <= 0) { toast('Enter an amount first', 'error'); return; }
+  state.notes = document.getElementById('payNotes').value.trim();
+  state.month = document.getElementById('payMonth').value || thisMonthStr();
+
+  document.getElementById('rvUnit').textContent  = state.tenant.unit;
+  document.getElementById('rvName').textContent  = state.tenant.name;
+  document.getElementById('rvMode').textContent  = state.mode;
+  document.getElementById('rvMonth').textContent = state.month;
+  document.getElementById('rvTotal').textContent = peso(state.amount);
+
+  if (state.notes) {
+    document.getElementById('rvNotesRow').style.display = 'flex';
+    document.getElementById('rvNotes').textContent = state.notes;
+  } else {
+    document.getElementById('rvNotesRow').style.display = 'none';
+  }
+  document.getElementById('rvPhotoRow').style.display = state.photoFile ? 'flex' : 'none';
+
+  goScreen('review');
+}
+
+// ============================================================================
+// SCREEN 4: SUBMIT
+// ============================================================================
+function submitPayment() {
+  const btn = document.getElementById('submitBtn');
+  const orig = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Submitting…';
+
+  const payload = {
+    action: 'submitTenantPayment',
+    unit: state.tenant.unit,
+    pin: state.pin || '',
+    amount: state.amount,
+    mode: state.mode,
+    month: state.month,
+    remarks: state.notes
+  };
+
+  // Re-validate session: if PIN was cleared (security wipe), re-prompt instead of failing silently.
+  const proceed = (b64, name, mime) => {
+    if (b64) { payload.photoBase64 = b64; payload.photoName = name; payload.photoMime = mime; }
+    return apiPost(payload);
+  };
+
+  const ready = state.photoFile
+    ? fileToBase64(state.photoFile).then(b64 => proceed(b64, state.photoFile.name, state.photoFile.type))
+    : proceed(null, null, null);
+
+  ready.then(r => {
+    btn.disabled = false;
+    btn.innerHTML = orig;
+    if (!r.ok) {
+      if (r.locked) { showLocked(); return; }
+      if (r.error === 'Invalid PIN') {
+        // Session expired or PIN got cleared somehow — back to PIN screen.
+        toast('Please re-enter your PIN', 'error');
+        state.pin = '';
+        renderPinDots();
+        document.getElementById('pinWarn').innerHTML = '';
+        goScreen('pin');
+        return;
+      }
+      toast(r.error || 'Submission failed', 'error');
+      return;
+    }
+    document.getElementById('successRef').textContent = r.id || '—';
+    document.getElementById('okUnit').textContent  = state.tenant.unit;
+    document.getElementById('okAmt').textContent   = peso(state.amount);
+    document.getElementById('okMode').textContent  = state.mode;
+    goScreen('success');
+  });
+}
+
+// ============================================================================
+// EVENT WIRING
+// ============================================================================
+function wireEvents() {
+  // PIN pad — delegated, supports both click and touchstart for instant feel
+  document.getElementById('pinPad').addEventListener('click', e => {
+    const k = e.target.closest('.pin-key');
+    if (!k || k.hasAttribute('disabled')) return;
+    onPinKey(k.dataset.key);
+  });
+
+  // Amount pad
+  document.getElementById('amtPad').addEventListener('click', e => {
+    const k = e.target.closest('.pin-key');
+    if (!k) return;
+    onAmtKey(k.dataset.amt);
+  });
+
+  // Mode pills
+  document.getElementById('modeGrid').addEventListener('click', e => {
+    const p = e.target.closest('.mode-pill');
+    if (!p) return;
+    state.mode = p.dataset.mode;
+    renderModePills();
+  });
+
+  // Month field
+  document.getElementById('payMonth').addEventListener('change', e => {
+    state.month = e.target.value;
+  });
+
+  // Prevent zoom on iOS double-tap inside the app shell
+  let lastTouch = 0;
+  document.addEventListener('touchend', e => {
+    const now = Date.now();
+    if (now - lastTouch <= 350) e.preventDefault();
+    lastTouch = now;
+  }, { passive: false });
+}
+
+// ============================================================================
+// BOOT
+// ============================================================================
+(function boot() {
+  state.month = thisMonthStr();
+  document.getElementById('payMonth').value = state.month;
+  renderAmount();
+  renderModePills();
+  wireEvents();
+
+  apiGet('getPublicConfig').then(r => {
+    if (r.ok && r.config) {
+      state.property.name  = r.config.property_name  || state.property.name;
+      state.property.phone = r.config.property_phone || '';
+      document.getElementById('hdrTitle').textContent = state.property.name;
+    }
+  });
+  loadUnits();
+})();
+</script>
+</body>
+</html>
