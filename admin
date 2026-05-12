@@ -1,0 +1,1410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#2563eb">
+<title>JJ Apartment Admin</title>
+<style>
+  *,*::before,*::after { box-sizing: border-box; }
+  :root {
+    --bg: #f5f7fa;
+    --card: #ffffff;
+    --border: #e5e7eb;
+    --text: #111827;
+    --muted: #6b7280;
+    --primary: #2563eb;
+    --primary-dark: #1e40af;
+    --success: #16a34a;
+    --warn: #d97706;
+    --danger: #dc2626;
+    --soft-blue: #eff6ff;
+    --soft-green: #f0fdf4;
+    --soft-red: #fef2f2;
+    --soft-amber: #fffbeb;
+    --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-lg: 0 10px 25px rgba(0,0,0,0.12);
+    --radius: 12px;
+    --radius-sm: 8px;
+    --nav-h: 64px;
+    --safe-bot: 28px;
+  }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-size: 15px;
+    line-height: 1.45;
+    -webkit-font-smoothing: antialiased;
+    overscroll-behavior-y: none;
+  }
+  body { padding-bottom: calc(var(--nav-h) + var(--safe-bot) + env(safe-area-inset-bottom)); }
+
+  .app { max-width: 540px; margin: 0 auto; min-height: 100vh; background: var(--bg); position: relative; }
+
+  /* Header */
+  .header {
+    position: sticky; top: 0; z-index: 50;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: #fff;
+    padding: 14px 16px 12px;
+    padding-top: calc(14px + env(safe-area-inset-top));
+    box-shadow: var(--shadow);
+  }
+  .header h1 { margin: 0; font-size: 18px; font-weight: 700; letter-spacing: 0.2px; }
+  .header .sub { font-size: 12px; opacity: 0.85; margin-top: 2px; }
+  .header-row { display: flex; align-items: center; justify-content: space-between; }
+  .refresh-btn {
+    background: rgba(255,255,255,0.18); border: none; color: #fff;
+    width: 38px; height: 38px; border-radius: 50%; cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 16px;
+  }
+  .refresh-btn:active { transform: scale(0.94); filter: brightness(0.92); }
+
+  /* Pages */
+  .page { display: none; padding: 14px 14px 20px; }
+  .page.active { display: block; }
+  .page-title { font-size: 14px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin: 14px 4px 8px; }
+
+  /* Cards */
+  .card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 14px;
+    box-shadow: var(--shadow); margin-bottom: 12px;
+  }
+  .card.tap { cursor: pointer; }
+  .card.tap:active { transform: scale(0.985); filter: brightness(0.97); }
+
+  /* Stat cards */
+  .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+  .stat {
+    background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 12px; box-shadow: var(--shadow);
+  }
+  .stat .label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.4px; font-weight: 600; }
+  .stat .value { font-size: 20px; font-weight: 700; margin-top: 4px; }
+  .stat .value.green { color: var(--success); }
+  .stat .value.red { color: var(--danger); }
+  .stat .value.amber { color: var(--warn); }
+
+  /* Buttons */
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    gap: 6px; width: 100%; min-height: 52px;
+    background: var(--primary); color: #fff; border: none;
+    border-radius: var(--radius-sm); font-size: 16px; font-weight: 600;
+    cursor: pointer; padding: 0 16px;
+    transition: transform 0.06s ease;
+  }
+  .btn:active { transform: scale(0.94); filter: brightness(0.92); }
+  .btn:disabled { opacity: 0.55; cursor: not-allowed; transform: none; filter: none; }
+  .btn.secondary { background: #fff; color: var(--text); border: 1px solid var(--border); }
+  .btn.success { background: var(--success); }
+  .btn.danger { background: var(--danger); }
+  .btn.warn { background: var(--warn); }
+  .btn.ghost { background: transparent; color: var(--primary); }
+  .btn.sm { min-height: 40px; font-size: 14px; padding: 0 12px; }
+  .btn-row { display: flex; gap: 8px; }
+  .btn-row .btn { flex: 1; }
+
+  /* Forms */
+  .field { margin-bottom: 12px; }
+  .field label { display: block; font-size: 13px; font-weight: 600; color: var(--muted); margin-bottom: 6px; }
+  .input, .select, textarea.input {
+    width: 100%; min-height: 46px; padding: 10px 12px;
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    font-size: 16px; background: #fff; color: var(--text);
+    font-family: inherit;
+  }
+  .input:focus, .select:focus, textarea.input:focus { outline: 2px solid var(--primary); outline-offset: -1px; border-color: var(--primary); }
+  textarea.input { min-height: 70px; resize: vertical; }
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+  /* List items */
+  .list-item {
+    background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 12px 14px; margin-bottom: 8px; box-shadow: var(--shadow);
+    display: flex; align-items: center; gap: 12px;
+  }
+  .list-item:active { transform: scale(0.985); filter: brightness(0.97); }
+  .li-main { flex: 1; min-width: 0; }
+  .li-title { font-weight: 600; font-size: 15px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .li-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .li-right { text-align: right; flex-shrink: 0; }
+  .li-amt { font-weight: 700; font-size: 15px; }
+
+  /* Badges */
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; }
+  .badge.paid { background: var(--soft-green); color: var(--success); }
+  .badge.unpaid { background: var(--soft-red); color: var(--danger); }
+  .badge.partial { background: var(--soft-amber); color: var(--warn); }
+  .badge.pending { background: var(--soft-amber); color: var(--warn); }
+  .badge.locked { background: var(--soft-red); color: var(--danger); }
+  .badge.muted { background: #f3f4f6; color: var(--muted); }
+
+  /* Bottom nav */
+  .bottom-nav {
+    position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+    width: 100%; max-width: 540px;
+    background: #fff; border-top: 1px solid var(--border);
+    display: flex; height: var(--nav-h);
+    padding-bottom: env(safe-area-inset-bottom);
+    z-index: 100;
+  }
+  .nav-item {
+    flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    background: none; border: none; cursor: pointer;
+    color: var(--muted); font-size: 11px; font-weight: 600; gap: 2px;
+    padding: 6px 0;
+  }
+  .nav-item .ic { font-size: 20px; line-height: 1; }
+  .nav-item.active { color: var(--primary); }
+  .nav-item:active { filter: brightness(0.85); }
+
+  /* Bottom-sheet modals */
+  .modal-bg {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+    z-index: 200; display: none; align-items: flex-end; justify-content: center;
+  }
+  .modal-bg.show { display: flex; }
+  .modal {
+    background: #fff; width: 100%; max-width: 540px;
+    border-radius: 16px 16px 0 0;
+    max-height: 92vh; overflow-y: auto;
+    padding: 8px 16px calc(24px + env(safe-area-inset-bottom));
+    animation: slideUp 0.22s ease-out;
+  }
+  @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  .modal-handle { width: 40px; height: 4px; background: #d1d5db; border-radius: 4px; margin: 8px auto 12px; }
+  .modal h2 { margin: 0 0 14px; font-size: 18px; }
+  .modal h3 { margin: 14px 0 8px; font-size: 15px; }
+
+  /* Toast */
+  .toast {
+    position: fixed; left: 50%; bottom: calc(var(--nav-h) + 20px + env(safe-area-inset-bottom));
+    transform: translateX(-50%);
+    background: #111; color: #fff; padding: 12px 18px;
+    border-radius: 999px; font-size: 14px; font-weight: 500;
+    z-index: 300; opacity: 0; pointer-events: none;
+    transition: opacity 0.2s, transform 0.2s;
+    max-width: 90%; text-align: center;
+    box-shadow: var(--shadow-lg);
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(-4px); }
+  .toast.success { background: var(--success); }
+  .toast.error { background: var(--danger); }
+
+  /* Spinner */
+  .spinner {
+    display: inline-block; width: 14px; height: 14px; border: 2px solid #fff;
+    border-top-color: transparent; border-radius: 50%; animation: spin 0.7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .empty { text-align: center; padding: 30px 14px; color: var(--muted); font-size: 14px; }
+  .empty .ic { font-size: 36px; display: block; margin-bottom: 6px; opacity: 0.5; }
+
+  .activity { font-size: 13px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+  .activity:last-child { border-bottom: none; }
+  .activity .ts { color: var(--muted); font-size: 11px; }
+
+  .pin-display {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: #f3f4f6; padding: 3px 8px; border-radius: 6px;
+    font-family: "SF Mono", Menlo, monospace; font-weight: 700; letter-spacing: 1.5px;
+  }
+  .eye-btn { background: none; border: none; cursor: pointer; font-size: 14px; padding: 0; color: var(--muted); }
+
+  .meter-confirm {
+    background: var(--soft-blue); border: 1px solid #bfdbfe; border-radius: var(--radius);
+    padding: 12px; margin-bottom: 12px;
+  }
+  .meter-confirm .row { display: flex; justify-content: space-between; font-size: 13px; padding: 3px 0; }
+  .meter-confirm .row b { font-weight: 700; }
+  .meter-confirm .amt { font-size: 22px; font-weight: 700; color: var(--primary); margin: 8px 0; text-align: center; }
+
+  .pull-info { font-size: 12px; color: var(--muted); padding: 4px 4px 10px; }
+
+  .receipt-sms {
+    background: #f9fafb; border: 1px dashed var(--border); border-radius: var(--radius-sm);
+    padding: 10px; white-space: pre-wrap; font-size: 13px; font-family: -apple-system, monospace;
+    margin-top: 8px;
+  }
+
+  .seg {
+    display: flex; background: #f3f4f6; border-radius: 8px; padding: 3px; margin-bottom: 12px;
+  }
+  .seg button {
+    flex: 1; background: none; border: none; padding: 8px 6px;
+    font-size: 13px; font-weight: 600; color: var(--muted);
+    cursor: pointer; border-radius: 6px;
+  }
+  .seg button.active { background: #fff; color: var(--text); box-shadow: var(--shadow); }
+
+  .photo-link { color: var(--primary); text-decoration: none; font-size: 12px; font-weight: 600; }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="header">
+    <div class="header-row">
+      <div>
+        <h1 id="hdrTitle">JJ Apartment</h1>
+        <div class="sub" id="hdrSub">Dashboard</div>
+      </div>
+      <button class="refresh-btn" onclick="refreshCurrentPage()" title="Refresh">⟳</button>
+    </div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div class="page active" id="page-dashboard">
+    <div class="pull-info" id="dashMonth">This month</div>
+    <div class="stat-grid">
+      <div class="stat"><div class="label">Expected</div><div class="value" id="dExpected">—</div></div>
+      <div class="stat"><div class="label">Collected</div><div class="value green" id="dCollected">—</div></div>
+      <div class="stat"><div class="label">Outstanding</div><div class="value red" id="dOutstanding">—</div></div>
+      <div class="stat"><div class="label">Collection</div><div class="value amber" id="dRate">—</div></div>
+    </div>
+
+    <div class="card tap" onclick="goPage('pending')" id="cardPending">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div>
+          <div style="font-weight:600;">Pending Approvals</div>
+          <div style="font-size:12px;color:var(--muted);">Tenant submissions awaiting review</div>
+        </div>
+        <div style="font-size:22px;font-weight:700;color:var(--warn);" id="dPending">0</div>
+      </div>
+    </div>
+
+    <div class="page-title">Unpaid Tenants</div>
+    <div id="unpaidList"></div>
+
+    <div class="page-title">Recent Activity</div>
+    <div class="card" id="recentActivity"><div class="empty">Loading…</div></div>
+  </div>
+
+  <!-- TENANTS -->
+  <div class="page" id="page-tenants">
+    <button class="btn" onclick="openTenantForm(null)">+ Add Tenant</button>
+    <div style="height:12px;"></div>
+    <input class="input" id="tenantSearch" placeholder="Search by name or unit…" oninput="renderTenants()">
+    <div style="height:8px;"></div>
+    <div class="seg">
+      <button class="active" data-flt="active" onclick="setTenantFilter('active')">Active</button>
+      <button data-flt="all" onclick="setTenantFilter('all')">All</button>
+    </div>
+    <div id="tenantList"></div>
+  </div>
+
+  <!-- METERS -->
+  <div class="page" id="page-meters">
+    <button class="btn" onclick="openMeterForm()">+ New Reading</button>
+    <div style="height:14px;"></div>
+    <div class="page-title">Recent Readings</div>
+    <div id="meterList"></div>
+  </div>
+
+  <!-- PAYMENTS -->
+  <div class="page" id="page-payments">
+    <button class="btn" onclick="openPaymentForm()">+ Record Payment</button>
+    <div style="height:14px;"></div>
+    <div class="seg">
+      <button class="active" data-pseg="recent" onclick="setPaymentSeg('recent')">Recent</button>
+      <button data-pseg="month"  onclick="setPaymentSeg('month')">This Month</button>
+      <button data-pseg="exp"    onclick="setPaymentSeg('exp')">Expenses</button>
+    </div>
+    <div id="payList"></div>
+  </div>
+
+  <!-- PENDING (hidden, reached from dashboard) -->
+  <div class="page" id="page-pending">
+    <button class="btn secondary" onclick="goPage('dashboard')">← Back to Dashboard</button>
+    <div style="height:14px;"></div>
+    <div class="page-title">Pending Tenant Submissions</div>
+    <div id="pendingList"></div>
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <div class="bottom-nav">
+    <button class="nav-item active" data-nav="dashboard" onclick="goPage('dashboard')">
+      <span class="ic">📊</span><span>Dashboard</span>
+    </button>
+    <button class="nav-item" data-nav="tenants" onclick="goPage('tenants')">
+      <span class="ic">👥</span><span>Tenants</span>
+    </button>
+    <button class="nav-item" data-nav="meters" onclick="goPage('meters')">
+      <span class="ic">⚡</span><span>Meters</span>
+    </button>
+    <button class="nav-item" data-nav="payments" onclick="goPage('payments')">
+      <span class="ic">💵</span><span>Payments</span>
+    </button>
+  </div>
+
+</div>
+
+<!-- ============ MODALS ============ -->
+
+<!-- Tenant Form -->
+<div class="modal-bg" id="modalTenant">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <h2 id="tenantFormTitle">New Tenant</h2>
+    <input type="hidden" id="tfId">
+    <input type="hidden" id="tfClientTs">
+    <div class="row2">
+      <div class="field"><label>Unit *</label><input class="input" id="tfUnit" inputmode="numeric"></div>
+      <div class="field"><label>Apartment</label><input class="input" id="tfApt"></div>
+    </div>
+    <div class="field"><label>Name *</label><input class="input" id="tfName"></div>
+    <div class="row2">
+      <div class="field"><label>Phone</label><input class="input" id="tfPhone" inputmode="tel"></div>
+      <div class="field"><label>Email</label><input class="input" id="tfEmail" inputmode="email"></div>
+    </div>
+    <div class="row2">
+      <div class="field"><label>Rent (₱) *</label><input class="input" id="tfRent" inputmode="decimal"></div>
+      <div class="field"><label>Security Deposit (₱)</label><input class="input" id="tfDeposit" inputmode="decimal"></div>
+    </div>
+    <div class="row2">
+      <div class="field"><label>Move-in Date</label><input class="input" id="tfMoveIn" type="date"></div>
+      <div class="field"><label>Status</label>
+        <select class="select" id="tfStatus">
+          <option value="Active">Active</option>
+          <option value="Inactive">Inactive</option>
+        </select>
+      </div>
+    </div>
+    <div class="field"><label>Emergency Contact</label><input class="input" id="tfEC"></div>
+    <div class="field"><label>Emergency Phone</label><input class="input" id="tfEP" inputmode="tel"></div>
+    <div class="field" id="tfPinWrap">
+      <label>PIN (4 digits) <span style="color:var(--muted);font-weight:400;">— auto-generated if blank</span></label>
+      <input class="input" id="tfPin" inputmode="numeric" maxlength="4">
+    </div>
+    <div class="field"><label>Notes</label><textarea class="input" id="tfNotes"></textarea></div>
+    <div class="btn-row">
+      <button class="btn secondary" onclick="closeModal('modalTenant')">Cancel</button>
+      <button class="btn" id="tfSaveBtn" onclick="saveTenant()">Save</button>
+    </div>
+    <div style="height:8px;"></div>
+    <button class="btn ghost sm" id="tfResetPinBtn" style="display:none;" onclick="resetTenantPin()">🔄 Reset PIN</button>
+    <button class="btn ghost sm" id="tfDeactivateBtn" style="display:none;color:var(--danger);" onclick="deactivateTenant()">Deactivate Tenant</button>
+  </div>
+</div>
+
+<!-- Tenant Detail / Ledger -->
+<div class="modal-bg" id="modalLedger">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <h2 id="ledTitle">Tenant Ledger</h2>
+    <div class="card" style="margin-bottom:12px;">
+      <div style="display:flex;justify-content:space-between;font-size:13px;">
+        <div><div style="color:var(--muted);font-size:11px;">CHARGED (mo)</div><div id="ledCharged" style="font-weight:700;font-size:16px;">—</div></div>
+        <div><div style="color:var(--muted);font-size:11px;">PAID (mo)</div><div id="ledPaid" style="font-weight:700;font-size:16px;color:var(--success);">—</div></div>
+        <div><div style="color:var(--muted);font-size:11px;">BALANCE</div><div id="ledBal" style="font-weight:700;font-size:16px;">—</div></div>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn sm" onclick="openPaymentFromLedger()">+ Payment</button>
+      <button class="btn sm secondary" onclick="editTenantFromLedger()">✎ Edit</button>
+    </div>
+    <div style="height:14px;"></div>
+    <div class="page-title">Last 6 months</div>
+    <div id="ledRows"></div>
+    <div style="height:10px;"></div>
+    <button class="btn secondary" onclick="closeModal('modalLedger')">Close</button>
+  </div>
+</div>
+
+<!-- Payment Form -->
+<div class="modal-bg" id="modalPayment">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <h2>Record Payment</h2>
+    <div class="field"><label>Tenant *</label>
+      <select class="select" id="pfTenant" onchange="onPayTenantChange()"></select>
+    </div>
+    <div id="pfBalLine" style="font-size:12px;color:var(--muted);margin-top:-6px;margin-bottom:10px;"></div>
+    <div class="row2">
+      <div class="field"><label>Month *</label><input class="input" id="pfMonth" type="month"></div>
+      <div class="field"><label>Date Paid *</label><input class="input" id="pfDate" type="date"></div>
+    </div>
+    <div class="row2">
+      <div class="field"><label>Rent</label><input class="input" id="pfRent" inputmode="decimal" value="0"></div>
+      <div class="field"><label>Electric</label><input class="input" id="pfElec" inputmode="decimal" value="0"></div>
+    </div>
+    <div class="row2">
+      <div class="field"><label>Water</label><input class="input" id="pfWater" inputmode="decimal" value="0"></div>
+      <div class="field"><label>Shared Util.</label><input class="input" id="pfShared" inputmode="decimal" value="0"></div>
+    </div>
+    <div class="field"><label>Mode</label>
+      <select class="select" id="pfMode">
+        <option>Cash</option><option>GCash</option><option>Bank Transfer</option><option>Maya</option><option>Other</option>
+      </select>
+    </div>
+    <div class="field"><label>Remarks</label><textarea class="input" id="pfRemarks"></textarea></div>
+    <div style="font-size:13px;color:var(--muted);margin:6px 0 10px;">Total: <b id="pfTotal" style="color:var(--text);font-size:16px;">₱0.00</b></div>
+    <div class="btn-row">
+      <button class="btn secondary" onclick="closeModal('modalPayment')">Cancel</button>
+      <button class="btn success" id="pfSaveBtn" onclick="savePayment()">Record Payment</button>
+    </div>
+  </div>
+</div>
+
+<!-- SMS Receipt -->
+<div class="modal-bg" id="modalSms">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <h2>✅ Payment Recorded</h2>
+    <div id="smsBalLine" style="font-size:14px;color:var(--muted);margin-bottom:6px;"></div>
+    <div class="receipt-sms" id="smsBody"></div>
+    <div style="height:12px;"></div>
+    <div class="btn-row">
+      <button class="btn secondary" onclick="closeModal('modalSms')">Done</button>
+      <button class="btn" onclick="copySms()">📋 Copy SMS</button>
+    </div>
+  </div>
+</div>
+
+<!-- Meter Form -->
+<div class="modal-bg" id="modalMeter">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <h2>New Meter Reading</h2>
+    <div class="row2">
+      <div class="field"><label>Type *</label>
+        <select class="select" id="mfType" onchange="onMeterUnitTypeChange()">
+          <option value="Electric">Electric</option>
+          <option value="Water">Water</option>
+        </select>
+      </div>
+      <div class="field"><label>Unit *</label>
+        <select class="select" id="mfUnit" onchange="onMeterUnitTypeChange()"></select>
+      </div>
+    </div>
+    <div class="row2">
+      <div class="field"><label>Date *</label><input class="input" id="mfDate" type="date"></div>
+      <div class="field"><label>Rate (₱/unit)</label><input class="input" id="mfRate" inputmode="decimal"></div>
+    </div>
+    <div class="row2">
+      <div class="field"><label>Previous</label>
+        <input class="input" id="mfPrev" inputmode="decimal" readonly style="background:#f3f4f6;">
+        <div style="font-size:11px;color:var(--muted);margin-top:2px;" id="mfPrevDate"></div>
+      </div>
+      <div class="field"><label>Current *</label><input class="input" id="mfCurr" inputmode="decimal" oninput="recalcMeter()"></div>
+    </div>
+    <div style="font-size:13px;color:var(--muted);margin:4px 0 12px;">
+      Consumption: <b id="mfCons" style="color:var(--text);">0</b> &nbsp; · &nbsp; Amount: <b id="mfAmt" style="color:var(--primary);">₱0.00</b>
+    </div>
+    <div class="field"><label>Meter Photo (optional)</label>
+      <input class="input" id="mfPhoto" type="file" accept="image/*" capture="environment">
+    </div>
+    <div class="btn-row">
+      <button class="btn secondary" onclick="closeModal('modalMeter')">Cancel</button>
+      <button class="btn" id="mfSaveBtn" onclick="saveMeter()">Save Reading</button>
+    </div>
+  </div>
+</div>
+
+<!-- Post Charge Confirmation -->
+<div class="modal-bg" id="modalPostCharge">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <h2>Post to Tenant Ledger?</h2>
+    <div class="meter-confirm" id="pcSummary"></div>
+    <p style="font-size:13px;color:var(--muted);">This will add a Charge to the tenant's ledger and increase their balance. You can post later from the meter list if you skip now.</p>
+    <div class="btn-row">
+      <button class="btn secondary" onclick="closeModal('modalPostCharge')">Skip for now</button>
+      <button class="btn success" id="pcBtn" onclick="doPostCharge()">Post Charge</button>
+    </div>
+  </div>
+</div>
+
+<!-- Pending review -->
+<div class="modal-bg" id="modalPendingReview">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <h2>Review Submission</h2>
+    <div id="prSummary" class="card" style="margin-bottom:12px;"></div>
+    <div id="prProofWrap" style="margin-bottom:12px;"></div>
+    <div class="page-title">Allocate Payment</div>
+    <div class="row2">
+      <div class="field"><label>Rent</label><input class="input" id="prRent" inputmode="decimal" value="0"></div>
+      <div class="field"><label>Electric</label><input class="input" id="prElec" inputmode="decimal" value="0"></div>
+    </div>
+    <div class="row2">
+      <div class="field"><label>Water</label><input class="input" id="prWater" inputmode="decimal" value="0"></div>
+      <div class="field"><label>Shared</label><input class="input" id="prShared" inputmode="decimal" value="0"></div>
+    </div>
+    <div class="field"><label>Note</label><textarea class="input" id="prNote"></textarea></div>
+    <div class="btn-row">
+      <button class="btn danger" id="prRejectBtn" onclick="reviewPending('reject')">Reject</button>
+      <button class="btn success" id="prApproveBtn" onclick="reviewPending('approve')">Approve</button>
+    </div>
+    <div style="height:8px;"></div>
+    <button class="btn secondary" onclick="closeModal('modalPendingReview')">Cancel</button>
+  </div>
+</div>
+
+<!-- Expense Form -->
+<div class="modal-bg" id="modalExpense">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <h2>New Expense</h2>
+    <div class="row2">
+      <div class="field"><label>Date *</label><input class="input" id="efDate" type="date"></div>
+      <div class="field"><label>Amount (₱) *</label><input class="input" id="efAmt" inputmode="decimal"></div>
+    </div>
+    <div class="field"><label>Category</label>
+      <select class="select" id="efCat">
+        <option>Maintenance</option><option>Utilities</option><option>Supplies</option>
+        <option>Staff</option><option>Tax</option><option>Other</option>
+      </select>
+    </div>
+    <div class="field"><label>Notes</label><textarea class="input" id="efNotes"></textarea></div>
+    <div class="btn-row">
+      <button class="btn secondary" onclick="closeModal('modalExpense')">Cancel</button>
+      <button class="btn" id="efSaveBtn" onclick="saveExpense()">Save Expense</button>
+    </div>
+  </div>
+</div>
+
+<!-- Payment detail / void -->
+<div class="modal-bg" id="modalPayDetail">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <h2>Payment Details</h2>
+    <div id="pdBody" class="card" style="margin-bottom:12px;"></div>
+    <div class="btn-row">
+      <button class="btn secondary" onclick="closeModal('modalPayDetail')">Close</button>
+      <button class="btn danger" id="pdVoidBtn" onclick="voidPayment()">Void</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ============================================================================
+// STATE
+// ============================================================================
+const API_BASE = window.location.pathname.includes('/exec') ? window.location.pathname : '';
+const API_URL  = window.location.href.split('?')[0];
+
+let state = {
+  page: 'dashboard',
+  dashboard: null,
+  tenants: [],
+  tenantFilter: 'active',
+  meters: [],
+  payments: [],
+  expenses: [],
+  pending: [],
+  config: {},
+  units: [],
+  curTenant: null,
+  curLedger: null,
+  curPending: null,
+  curPayment: null,
+  pendingCharge: null,
+  lastSmsText: '',
+  pinShownFor: {}
+};
+
+// ============================================================================
+// API
+// ============================================================================
+function apiGet(action, params) {
+  const qs = new URLSearchParams(Object.assign({ action }, params || {})).toString();
+  return fetch(API_URL + '?' + qs, { method: 'GET' })
+    .then(r => r.json())
+    .catch(e => ({ ok: false, error: e.message }));
+}
+function apiPost(body) {
+  return fetch(API_URL, {
+    method: 'POST',
+    body: JSON.stringify(body),
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' } // avoid CORS preflight
+  }).then(r => r.json()).catch(e => ({ ok: false, error: e.message }));
+}
+
+// ============================================================================
+// UTILITIES
+// ============================================================================
+function peso(n) {
+  const v = Number(n) || 0;
+  return '₱' + v.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+function todayStr() {
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+function thisMonthStr() {
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+}
+function esc(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+function toast(msg, kind) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show ' + (kind || '');
+  clearTimeout(t._tm);
+  t._tm = setTimeout(() => { t.className = 'toast'; }, 2400);
+}
+function withSpinner(btnId, fn) {
+  const btn = document.getElementById(btnId);
+  const orig = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Working…';
+  return Promise.resolve(fn()).finally(() => {
+    btn.disabled = false;
+    btn.innerHTML = orig;
+  });
+}
+function openModal(id) { document.getElementById(id).classList.add('show'); }
+function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+document.addEventListener('click', e => {
+  if (e.target.classList.contains('modal-bg')) e.target.classList.remove('show');
+});
+
+function fileToBase64(file) {
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = () => {
+      const s = r.result;
+      const idx = s.indexOf(',');
+      res(idx === -1 ? s : s.substring(idx + 1));
+    };
+    r.onerror = () => rej(new Error('File read failed'));
+    r.readAsDataURL(file);
+  });
+}
+
+// ============================================================================
+// NAVIGATION
+// ============================================================================
+function goPage(p) {
+  state.page = p;
+  document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
+  document.getElementById('page-' + p).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(el => {
+    el.classList.toggle('active', el.dataset.nav === p);
+  });
+  const titles = {
+    dashboard: 'Dashboard', tenants: 'Tenants', meters: 'Meters',
+    payments: 'Payments & Expenses', pending: 'Pending Approvals'
+  };
+  document.getElementById('hdrSub').textContent = titles[p] || '';
+  window.scrollTo(0, 0);
+  refreshCurrentPage();
+}
+function refreshCurrentPage() {
+  if (state.page === 'dashboard') loadDashboard();
+  else if (state.page === 'tenants') loadTenants();
+  else if (state.page === 'meters') loadMeters();
+  else if (state.page === 'payments') loadPaymentsSeg();
+  else if (state.page === 'pending') loadPending();
+}
+
+// ============================================================================
+// DASHBOARD
+// ============================================================================
+function loadDashboard() {
+  document.getElementById('unpaidList').innerHTML = '<div class="empty">Loading…</div>';
+  document.getElementById('recentActivity').innerHTML = '<div class="empty">Loading…</div>';
+  apiGet('getDashboard').then(r => {
+    if (!r.ok) { toast(r.error || 'Failed to load dashboard', 'error'); return; }
+    state.dashboard = r;
+    document.getElementById('dashMonth').textContent = 'Month: ' + r.month;
+    document.getElementById('dExpected').textContent    = peso(r.totalExpected);
+    document.getElementById('dCollected').textContent   = peso(r.totalCollected);
+    document.getElementById('dOutstanding').textContent = peso(r.totalOutstanding);
+    document.getElementById('dRate').textContent        = (r.collectionRate || 0) + '%';
+    document.getElementById('dPending').textContent     = r.pendingApprovals || 0;
+
+    const ulist = document.getElementById('unpaidList');
+    if (!r.unpaidTenants || r.unpaidTenants.length === 0) {
+      ulist.innerHTML = '<div class="empty">🎉 Everyone\'s paid up.</div>';
+    } else {
+      ulist.innerHTML = r.unpaidTenants.map(u => `
+        <div class="list-item" onclick="openLedger('${esc(u.tenantId)}')">
+          <div class="li-main">
+            <div class="li-title">Unit ${esc(u.unit)} · ${esc(u.name)}</div>
+            <div class="li-sub">${u.daysSinceLastPayment == null ? 'No payments yet' : u.daysSinceLastPayment + ' days since last payment'}</div>
+          </div>
+          <div class="li-right">
+            <div class="li-amt" style="color:var(--danger);">${peso(u.balance)}</div>
+            <span class="badge unpaid">Unpaid</span>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    const ract = document.getElementById('recentActivity');
+    if (!r.recentActivity || r.recentActivity.length === 0) {
+      ract.innerHTML = '<div class="empty">No recent activity.</div>';
+    } else {
+      ract.innerHTML = r.recentActivity.map(a => {
+        const color = a.type === 'Payment' ? 'var(--success)' : (a.type === 'Charge' ? 'var(--warn)' : 'var(--muted)');
+        const sign  = a.type === 'Payment' ? '−' : (a.type === 'Charge' ? '+' : '');
+        return `<div class="activity">
+          <div style="display:flex;justify-content:space-between;">
+            <span><b>${esc(a.name)}</b> · Unit ${esc(a.unit)} · ${esc(a.category)}</span>
+            <span style="color:${color};font-weight:700;">${sign}${peso(a.amount)}</span>
+          </div>
+          <div class="ts">${esc(a.timestamp)} · ${esc(a.type)}</div>
+        </div>`;
+      }).join('');
+    }
+  });
+}
+
+// ============================================================================
+// TENANTS
+// ============================================================================
+function loadTenants() {
+  document.getElementById('tenantList').innerHTML = '<div class="empty">Loading…</div>';
+  const includeInactive = state.tenantFilter === 'all';
+  apiGet('getTenants', includeInactive ? { includeInactive: 'true' } : {}).then(r => {
+    if (!r.ok) { toast(r.error || 'Failed to load tenants', 'error'); return; }
+    state.tenants = r.tenants;
+    renderTenants();
+  });
+}
+function setTenantFilter(f) {
+  state.tenantFilter = f;
+  document.querySelectorAll('[data-flt]').forEach(b => b.classList.toggle('active', b.dataset.flt === f));
+  loadTenants();
+}
+function renderTenants() {
+  const q = (document.getElementById('tenantSearch').value || '').trim().toLowerCase();
+  const list = state.tenants.filter(t => {
+    if (!q) return true;
+    return (t.name || '').toLowerCase().includes(q) || String(t.unit).toLowerCase().includes(q);
+  });
+  const wrap = document.getElementById('tenantList');
+  if (list.length === 0) {
+    wrap.innerHTML = '<div class="empty">No tenants found.</div>';
+    return;
+  }
+  wrap.innerHTML = list.map(t => {
+    const statusBadge = t.balance > 0
+      ? '<span class="badge unpaid">Unpaid</span>'
+      : '<span class="badge paid">Paid</span>';
+    const inactiveBadge = (t.status || '').toLowerCase() !== 'active'
+      ? '<span class="badge muted">Inactive</span>' : '';
+    const lockBadge = t.pinLocked ? '<span class="badge locked">🔒</span>' : '';
+    return `<div class="list-item" onclick="openLedger('${esc(t.tenantId)}')">
+      <div class="li-main">
+        <div class="li-title">Unit ${esc(t.unit)} · ${esc(t.name)} ${lockBadge}</div>
+        <div class="li-sub">${esc(t.phone || '—')} · Rent ${peso(t.rentAmount)} ${inactiveBadge}</div>
+      </div>
+      <div class="li-right">
+        <div class="li-amt" style="color:${t.balance > 0 ? 'var(--danger)' : 'var(--success)'};">${peso(t.balance)}</div>
+        ${statusBadge}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openTenantForm(tenant) {
+  document.getElementById('tenantFormTitle').textContent = tenant ? 'Edit Tenant' : 'New Tenant';
+  document.getElementById('tfId').value      = tenant ? tenant.tenantId : '';
+  document.getElementById('tfClientTs').value = tenant ? (tenant.lastUpdated || '') : '';
+  document.getElementById('tfUnit').value    = tenant ? tenant.unit : '';
+  document.getElementById('tfApt').value     = tenant ? tenant.apartment : '';
+  document.getElementById('tfName').value    = tenant ? tenant.name : '';
+  document.getElementById('tfPhone').value   = tenant ? tenant.phone : '';
+  document.getElementById('tfEmail').value   = tenant ? tenant.email : '';
+  document.getElementById('tfRent').value    = tenant ? tenant.rentAmount : '';
+  document.getElementById('tfDeposit').value = tenant ? tenant.securityDeposit : '';
+  document.getElementById('tfMoveIn').value  = tenant ? tenant.moveInDate : '';
+  document.getElementById('tfStatus').value  = tenant ? (tenant.status || 'Active') : 'Active';
+  document.getElementById('tfEC').value      = tenant ? tenant.emergencyContact : '';
+  document.getElementById('tfEP').value      = tenant ? tenant.emergencyPhone : '';
+  document.getElementById('tfNotes').value   = tenant ? tenant.notes : '';
+
+  const pinWrap = document.getElementById('tfPinWrap');
+  if (tenant) {
+    pinWrap.innerHTML = `<label>PIN <button type="button" class="eye-btn" onclick="togglePin('${esc(tenant.tenantId)}','${esc(tenant.pin)}')">👁</button></label>
+      <div class="pin-display" id="pinDisplay">••••</div>`;
+    document.getElementById('tfResetPinBtn').style.display = 'block';
+    document.getElementById('tfDeactivateBtn').style.display = (tenant.status || '').toLowerCase() === 'active' ? 'block' : 'none';
+    state._editingTenant = tenant;
+  } else {
+    pinWrap.innerHTML = `<label>PIN (4 digits) <span style="color:var(--muted);font-weight:400;">— auto-generated from unit if blank</span></label>
+      <input class="input" id="tfPin" inputmode="numeric" maxlength="4">`;
+    document.getElementById('tfResetPinBtn').style.display = 'none';
+    document.getElementById('tfDeactivateBtn').style.display = 'none';
+    state._editingTenant = null;
+  }
+  openModal('modalTenant');
+}
+
+function togglePin(tid, pin) {
+  const el = document.getElementById('pinDisplay');
+  if (!el) return;
+  if (el.textContent === '••••') el.textContent = pin || '(none)';
+  else el.textContent = '••••';
+}
+
+function saveTenant() {
+  const id   = document.getElementById('tfId').value;
+  const unit = document.getElementById('tfUnit').value.trim();
+  const name = document.getElementById('tfName').value.trim();
+  const rent = parseFloat(document.getElementById('tfRent').value);
+  if (!unit || !name || isNaN(rent)) { toast('Unit, Name and Rent are required', 'error'); return; }
+  const pinEl = document.getElementById('tfPin');
+  const pin = pinEl ? pinEl.value.trim() : '';
+  if (pin && !/^\d{4}$/.test(pin)) { toast('PIN must be exactly 4 digits', 'error'); return; }
+
+  withSpinner('tfSaveBtn', () => apiPost({
+    action: 'saveTenant',
+    tenantId: id || undefined,
+    clientTimestamp: document.getElementById('tfClientTs').value || undefined,
+    unit: unit,
+    apartment: document.getElementById('tfApt').value.trim(),
+    name: name,
+    phone: document.getElementById('tfPhone').value.trim(),
+    email: document.getElementById('tfEmail').value.trim(),
+    rentAmount: rent,
+    securityDeposit: parseFloat(document.getElementById('tfDeposit').value) || 0,
+    moveInDate: document.getElementById('tfMoveIn').value,
+    status: document.getElementById('tfStatus').value,
+    emergencyContact: document.getElementById('tfEC').value.trim(),
+    emergencyPhone: document.getElementById('tfEP').value.trim(),
+    pin: pin,
+    notes: document.getElementById('tfNotes').value.trim()
+  })).then(r => {
+    if (!r.ok) {
+      if (r.conflict) toast('Tenant was modified elsewhere. Refresh.', 'error');
+      else toast(r.error || 'Save failed', 'error');
+      return;
+    }
+    toast(id ? 'Tenant updated' : 'Tenant added · PIN: ' + r.pin, 'success');
+    closeModal('modalTenant');
+    loadTenants();
+  });
+}
+
+function resetTenantPin() {
+  if (!state._editingTenant) return;
+  if (!confirm('Reset PIN to default formula? The current PIN will stop working.')) return;
+  withSpinner('tfResetPinBtn', () => apiPost({
+    action: 'resetTenantPIN',
+    tenantId: state._editingTenant.tenantId
+  })).then(r => {
+    if (!r.ok) { toast(r.error || 'Reset failed', 'error'); return; }
+    toast('PIN reset to ' + r.pin, 'success');
+    state._editingTenant.pin = r.pin;
+    const el = document.getElementById('pinDisplay');
+    if (el) el.textContent = r.pin;
+  });
+}
+
+function deactivateTenant() {
+  if (!state._editingTenant) return;
+  if (!confirm('Mark this tenant Inactive?')) return;
+  withSpinner('tfDeactivateBtn', () => apiPost({
+    action: 'deactivateTenant',
+    tenantId: state._editingTenant.tenantId,
+    moveOutDate: todayStr()
+  })).then(r => {
+    if (!r.ok) { toast(r.error || 'Failed', 'error'); return; }
+    toast('Tenant deactivated', 'success');
+    closeModal('modalTenant');
+    loadTenants();
+  });
+}
+
+// ============================================================================
+// LEDGER
+// ============================================================================
+function openLedger(tenantId) {
+  const t = state.tenants.find(x => x.tenantId === tenantId) || (state.dashboard && state.dashboard.unpaidTenants.find(x => x.tenantId === tenantId));
+  state.curTenant = t || { tenantId, name: '', unit: '' };
+  document.getElementById('ledTitle').textContent = (t ? ('Unit ' + t.unit + ' · ' + t.name) : 'Ledger');
+  document.getElementById('ledCharged').textContent = '—';
+  document.getElementById('ledPaid').textContent = '—';
+  document.getElementById('ledBal').textContent = '—';
+  document.getElementById('ledRows').innerHTML = '<div class="empty">Loading…</div>';
+  openModal('modalLedger');
+  apiGet('getTenantLedger', { tenantId: tenantId, months: 6 }).then(r => {
+    if (!r.ok) { toast(r.error || 'Failed', 'error'); return; }
+    state.curLedger = r;
+    document.getElementById('ledCharged').textContent = peso(r.thisMonthSummary.charged);
+    document.getElementById('ledPaid').textContent = peso(r.thisMonthSummary.paid);
+    document.getElementById('ledBal').textContent = peso(r.computedBalance);
+    document.getElementById('ledBal').style.color = r.computedBalance > 0 ? 'var(--danger)' : 'var(--success)';
+
+    if (r.rows.length === 0) {
+      document.getElementById('ledRows').innerHTML = '<div class="empty">No activity yet.</div>';
+      return;
+    }
+    document.getElementById('ledRows').innerHTML = r.rows.map(row => {
+      const isCharge = row.type === 'Charge' || (row.type === 'Adjustment' && row.amount > 0);
+      const color = row.type === 'Payment' ? 'var(--success)' : (isCharge ? 'var(--danger)' : 'var(--muted)');
+      const sign  = row.type === 'Payment' ? '−' : (row.amount >= 0 ? '+' : '');
+      return `<div class="activity">
+        <div style="display:flex;justify-content:space-between;">
+          <span><b>${esc(row.category)}</b> · ${esc(row.type)}</span>
+          <span style="color:${color};font-weight:700;">${sign}${peso(Math.abs(row.amount))}</span>
+        </div>
+        <div class="ts">${esc(row.timestamp)} ${row.notes ? '· ' + esc(row.notes) : ''}</div>
+      </div>`;
+    }).join('');
+  });
+}
+
+function openPaymentFromLedger() {
+  closeModal('modalLedger');
+  openPaymentForm(state.curTenant ? state.curTenant.tenantId : null);
+}
+function editTenantFromLedger() {
+  const tid = state.curTenant && state.curTenant.tenantId;
+  if (!tid) return;
+  const full = state.tenants.find(x => x.tenantId === tid);
+  if (!full) {
+    // fetch the full row
+    apiGet('getTenants', { includeInactive: 'true' }).then(r => {
+      if (!r.ok) return toast('Load failed', 'error');
+      const t = r.tenants.find(x => x.tenantId === tid);
+      if (t) { closeModal('modalLedger'); openTenantForm(t); }
+    });
+  } else {
+    closeModal('modalLedger');
+    openTenantForm(full);
+  }
+}
+
+// ============================================================================
+// PAYMENTS
+// ============================================================================
+function openPaymentForm(preselectTenantId) {
+  apiGet('getTenants').then(r => {
+    if (!r.ok) { toast('Failed to load tenants', 'error'); return; }
+    const sel = document.getElementById('pfTenant');
+    sel.innerHTML = r.tenants.map(t =>
+      `<option value="${esc(t.tenantId)}" data-rent="${t.rentAmount}" data-bal="${t.balance}">Unit ${esc(t.unit)} · ${esc(t.name)}</option>`
+    ).join('');
+    if (preselectTenantId) sel.value = preselectTenantId;
+    document.getElementById('pfMonth').value = thisMonthStr();
+    document.getElementById('pfDate').value = todayStr();
+    document.getElementById('pfElec').value = '0';
+    document.getElementById('pfWater').value = '0';
+    document.getElementById('pfShared').value = '0';
+    document.getElementById('pfRemarks').value = '';
+    document.getElementById('pfMode').value = 'Cash';
+    onPayTenantChange();
+    ['pfRent','pfElec','pfWater','pfShared'].forEach(id => {
+      document.getElementById(id).oninput = recalcPayTotal;
+    });
+    openModal('modalPayment');
+  });
+}
+function onPayTenantChange() {
+  const sel = document.getElementById('pfTenant');
+  const opt = sel.options[sel.selectedIndex];
+  if (!opt) return;
+  const rent = parseFloat(opt.dataset.rent) || 0;
+  const bal = parseFloat(opt.dataset.bal) || 0;
+  document.getElementById('pfRent').value = rent;
+  document.getElementById('pfBalLine').textContent = 'Current balance: ' + peso(bal);
+  recalcPayTotal();
+}
+function recalcPayTotal() {
+  const total =
+    (parseFloat(document.getElementById('pfRent').value)   || 0) +
+    (parseFloat(document.getElementById('pfElec').value)   || 0) +
+    (parseFloat(document.getElementById('pfWater').value)  || 0) +
+    (parseFloat(document.getElementById('pfShared').value) || 0);
+  document.getElementById('pfTotal').textContent = peso(total);
+}
+function savePayment() {
+  const tid = document.getElementById('pfTenant').value;
+  if (!tid) { toast('Pick a tenant', 'error'); return; }
+  const rent  = parseFloat(document.getElementById('pfRent').value)   || 0;
+  const elec  = parseFloat(document.getElementById('pfElec').value)   || 0;
+  const water = parseFloat(document.getElementById('pfWater').value)  || 0;
+  const shrd  = parseFloat(document.getElementById('pfShared').value) || 0;
+  if (rent + elec + water + shrd <= 0) { toast('Total must be positive', 'error'); return; }
+
+  withSpinner('pfSaveBtn', () => apiPost({
+    action: 'recordPayment',
+    tenantId: tid,
+    month: document.getElementById('pfMonth').value,
+    datePaid: document.getElementById('pfDate').value,
+    rentPaid: rent, electricPaid: elec, waterPaid: water, sharedUtilities: shrd,
+    mode: document.getElementById('pfMode').value,
+    remarks: document.getElementById('pfRemarks').value.trim(),
+    device: 'admin'
+  })).then(r => {
+    if (!r.ok) { toast(r.error || 'Failed', 'error'); return; }
+    closeModal('modalPayment');
+    state.lastSmsText = r.smsText || '';
+    document.getElementById('smsBalLine').textContent = 'New balance: ' + peso(r.balance) + (r.emailSent ? ' · 📧 Receipt emailed' : '');
+    document.getElementById('smsBody').textContent = r.smsText || '';
+    openModal('modalSms');
+  });
+}
+function copySms() {
+  if (!state.lastSmsText) return;
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(state.lastSmsText).then(() => toast('Copied to clipboard', 'success'));
+  } else {
+    const ta = document.createElement('textarea');
+    ta.value = state.lastSmsText; document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); toast('Copied', 'success'); } catch (e) { toast('Copy failed', 'error'); }
+    document.body.removeChild(ta);
+  }
+}
+
+function setPaymentSeg(seg) {
+  state.paySeg = seg;
+  document.querySelectorAll('[data-pseg]').forEach(b => b.classList.toggle('active', b.dataset.pseg === seg));
+  loadPaymentsSeg();
+}
+function loadPaymentsSeg() {
+  const seg = state.paySeg || 'recent';
+  if (seg === 'exp') return loadExpenses();
+  document.getElementById('payList').innerHTML = '<div class="empty">Loading…</div>';
+  apiGet('getLog', { days: seg === 'month' ? 31 : 90 }).then(r => {
+    if (!r.ok) { toast(r.error || 'Failed', 'error'); return; }
+    let rows = r.payments;
+    if (seg === 'month') {
+      const m = thisMonthStr();
+      rows = rows.filter(p => String(p.Month).startsWith(m));
+    }
+    state.payments = rows;
+    renderPayments();
+  });
+}
+function renderPayments() {
+  const wrap = document.getElementById('payList');
+  if (!state.payments || state.payments.length === 0) {
+    const hasExpBtn = `<div style="margin-top:10px;"><button class="btn secondary" onclick="openExpenseForm()">+ Record Expense</button></div>`;
+    wrap.innerHTML = '<div class="empty">No payments.' + (state.paySeg === 'recent' ? hasExpBtn : '') + '</div>';
+    return;
+  }
+  wrap.innerHTML = state.payments.map(p => {
+    const total = (Number(p.RentPaid) || 0) + (Number(p.ElectricPaid) || 0) + (Number(p.WaterPaid) || 0) + (Number(p.SharedUtilities) || 0);
+    const voided = p.Voided === true || p.Voided === 'TRUE' || p.Voided === 'true';
+    return `<div class="list-item" onclick='openPayDetail(${JSON.stringify(p).replace(/'/g,"&apos;")})'>
+      <div class="li-main">
+        <div class="li-title">Unit ${esc(p.Unit)} · ${esc(p.Tenant)} ${voided ? '<span class="badge muted">VOID</span>' : ''}</div>
+        <div class="li-sub">${esc(p.Month)} · ${esc(p.Mode)} · ${esc(p.DatePaid)}</div>
+      </div>
+      <div class="li-right">
+        <div class="li-amt" style="${voided ? 'text-decoration:line-through;color:var(--muted);' : ''}">${peso(total)}</div>
+      </div>
+    </div>`;
+  }).join('');
+  wrap.insertAdjacentHTML('beforeend', `<div style="height:14px;"></div><button class="btn secondary" onclick="openExpenseForm()">+ Record Expense</button>`);
+}
+function openPayDetail(p) {
+  state.curPayment = p;
+  const total = (Number(p.RentPaid) || 0) + (Number(p.ElectricPaid) || 0) + (Number(p.WaterPaid) || 0) + (Number(p.SharedUtilities) || 0);
+  const voided = p.Voided === true || p.Voided === 'TRUE' || p.Voided === 'true';
+  const row = (l, v) => `<div style="display:flex;justify-content:space-between;padding:3px 0;font-size:13px;"><span style="color:var(--muted);">${l}</span><span>${v}</span></div>`;
+  document.getElementById('pdBody').innerHTML =
+    row('Tenant', esc(p.Tenant)) +
+    row('Unit', esc(p.Unit)) +
+    row('Month', esc(p.Month)) +
+    row('Date Paid', esc(p.DatePaid)) +
+    row('Rent', peso(p.RentPaid)) +
+    row('Electric', peso(p.ElectricPaid)) +
+    row('Water', peso(p.WaterPaid)) +
+    row('Shared', peso(p.SharedUtilities)) +
+    `<div style="border-top:1px solid var(--border);margin:6px 0;"></div>` +
+    row('<b>Total</b>', '<b>' + peso(total) + '</b>') +
+    row('Mode', esc(p.Mode)) +
+    row('Ref', esc(p.TxnID)) +
+    (p.Remarks ? row('Remarks', esc(p.Remarks)) : '') +
+    (voided ? row('VOIDED', esc(p.VoidReason || '—')) : '');
+  document.getElementById('pdVoidBtn').style.display = voided ? 'none' : 'inline-flex';
+  openModal('modalPayDetail');
+}
+function voidPayment() {
+  if (!state.curPayment) return;
+  const reason = prompt('Reason for voiding this payment?');
+  if (!reason) return;
+  withSpinner('pdVoidBtn', () => apiPost({
+    action: 'voidPayment', txnId: state.curPayment.TxnID, reason: reason
+  })).then(r => {
+    if (!r.ok) { toast(r.error || 'Failed', 'error'); return; }
+    toast('Payment voided', 'success');
+    closeModal('modalPayDetail');
+    loadPaymentsSeg();
+  });
+}
+
+// ============================================================================
+// EXPENSES
+// ============================================================================
+function openExpenseForm() {
+  document.getElementById('efDate').value = todayStr();
+  document.getElementById('efAmt').value = '';
+  document.getElementById('efCat').value = 'Maintenance';
+  document.getElementById('efNotes').value = '';
+  openModal('modalExpense');
+}
+function saveExpense() {
+  const amt = parseFloat(document.getElementById('efAmt').value);
+  if (isNaN(amt) || amt <= 0) { toast('Enter a positive amount', 'error'); return; }
+  withSpinner('efSaveBtn', () => apiPost({
+    action: 'saveExpense',
+    date: document.getElementById('efDate').value,
+    amount: amt,
+    category: document.getElementById('efCat').value,
+    notes: document.getElementById('efNotes').value.trim()
+  })).then(r => {
+    if (!r.ok) { toast(r.error || 'Failed', 'error'); return; }
+    toast('Expense saved', 'success');
+    closeModal('modalExpense');
+    if ((state.paySeg || 'recent') === 'exp') loadExpenses();
+  });
+}
+function loadExpenses() {
+  document.getElementById('payList').innerHTML = '<div class="empty">Loading…</div>';
+  apiGet('getExpenses', { days: 90 }).then(r => {
+    if (!r.ok) { toast(r.error || 'Failed', 'error'); return; }
+    state.expenses = r.expenses;
+    const wrap = document.getElementById('payList');
+    if (r.expenses.length === 0) {
+      wrap.innerHTML = '<div class="empty">No expenses in the last 90 days.</div>';
+    } else {
+      wrap.innerHTML = r.expenses.map(e => `<div class="list-item">
+        <div class="li-main">
+          <div class="li-title">${esc(e.Category)}</div>
+          <div class="li-sub">${esc(e.Date)} ${e.Notes ? ' · ' + esc(e.Notes) : ''}</div>
+        </div>
+        <div class="li-right"><div class="li-amt" style="color:var(--danger);">${peso(e.Amount)}</div></div>
+      </div>`).join('');
+    }
+    wrap.insertAdjacentHTML('beforeend', `<div style="height:14px;"></div><button class="btn" onclick="openExpenseForm()">+ Record Expense</button>`);
+  });
+}
+
+// ============================================================================
+// METERS
+// ============================================================================
+function openMeterForm() {
+  apiGet('getUnits').then(r => {
+    if (!r.ok) { toast('Failed to load units', 'error'); return; }
+    const sel = document.getElementById('mfUnit');
+    sel.innerHTML = r.units.map(u => `<option value="${esc(u)}">Unit ${esc(u)}</option>`).join('');
+    document.getElementById('mfType').value = 'Electric';
+    document.getElementById('mfDate').value = todayStr();
+    document.getElementById('mfRate').value = state.config.electric_rate || '';
+    document.getElementById('mfCurr').value = '';
+    document.getElementById('mfPhoto').value = '';
+    document.getElementById('mfCons').textContent = '0';
+    document.getElementById('mfAmt').textContent = '₱0.00';
+    onMeterUnitTypeChange();
+    openModal('modalMeter');
+  });
+}
+function onMeterUnitTypeChange() {
+  const type = document.getElementById('mfType').value;
+  const unit = document.getElementById('mfUnit').value;
+  document.getElementById('mfRate').value =
+    type === 'Electric' ? (state.config.electric_rate || '') : (state.config.water_rate || '');
+  apiGet('loadPrevReading', { unit, type }).then(r => {
+    document.getElementById('mfPrev').value = r.ok ? r.previous : 0;
+    document.getElementById('mfPrevDate').textContent = (r.ok && r.lastDate) ? 'Last reading: ' + r.lastDate : 'No previous reading';
+    recalcMeter();
+  });
+}
+function recalcMeter() {
+  const prev = parseFloat(document.getElementById('mfPrev').value) || 0;
+  const curr = parseFloat(document.getElementById('mfCurr').value) || 0;
+  const rate = parseFloat(document.getElementById('mfRate').value) || 0;
+  const cons = Math.max(0, curr - prev);
+  document.getElementById('mfCons').textContent = cons.toFixed(2);
+  document.getElementById('mfAmt').textContent = peso(cons * rate);
+}
+function saveMeter() {
+  const prev = parseFloat(document.getElementById('mfPrev').value) || 0;
+  const curr = parseFloat(document.getElementById('mfCurr').value);
+  if (isNaN(curr)) { toast('Enter current reading', 'error'); return; }
+  if (curr < prev) { toast('Current cannot be less than previous (' + prev + ')', 'error'); return; }
+  const rate = parseFloat(document.getElementById('mfRate').value);
+  if (isNaN(rate) || rate <= 0) { toast('Enter a valid rate', 'error'); return; }
+
+  const photo = document.getElementById('mfPhoto').files[0];
+  const submit = (b64, mime, name) => apiPost({
+    action: 'saveMeterReading',
+    type: document.getElementById('mfType').value,
+    unit: document.getElementById('mfUnit').value,
+    date: document.getElementById('mfDate').value,
+    previous: prev, current: curr, rate: rate,
+    photoBase64: b64, photoName: name, photoMime: mime
+  });
+
+  withSpinner('mfSaveBtn', () => {
+    if (!photo) return submit(null, null, null);
+    return fileToBase64(photo).then(b64 => submit(b64, photo.type, photo.name));
+  }).then(r => {
+    if (!r.ok) { toast(r.error || 'Failed', 'error'); return; }
+    closeModal('modalMeter');
+    toast('Reading saved', 'success');
+    if (r.pendingCharge) {
+      state.pendingCharge = r.pendingCharge;
+      const pc = r.pendingCharge;
+      const rowHTML = (l, v) => `<div class="row"><span>${l}</span><b>${v}</b></div>`;
+      document.getElementById('pcSummary').innerHTML =
+        rowHTML('Tenant', esc(pc.tenantName)) +
+        rowHTML('Unit', esc(pc.unit)) +
+        rowHTML('Type', esc(pc.type)) +
+        rowHTML('Consumption', pc.consumption.toFixed(2)) +
+        rowHTML('Rate', peso(pc.rate)) +
+        '<div class="amt">' + peso(pc.amount) + '</div>';
+      openModal('modalPostCharge');
+    } else {
+      loadMeters();
+    }
+  });
+}
+function doPostCharge() {
+  if (!state.pendingCharge) return;
+  withSpinner('pcBtn', () => apiPost({
+    action: 'postMeterCharge',
+    readingId: state.pendingCharge.readingId,
+    tenantId: state.pendingCharge.tenantId
+  })).then(r => {
+    if (!r.ok) { toast(r.error || 'Failed', 'error'); return; }
+    toast('Charge posted. New balance: ' + peso(r.balance), 'success');
+    closeModal('modalPostCharge');
+    state.pendingCharge = null;
+    loadMeters();
+  });
+}
+function loadMeters() {
+  document.getElementById('meterList').innerHTML = '<div class="empty">Loading…</div>';
+  apiGet('getMeters', { days: 120 }).then(r => {
+    if (!r.ok) { toast(r.error || 'Failed', 'error'); return; }
+    state.meters = r.meters;
+    const wrap = document.getElementById('meterList');
+    if (r.meters.length === 0) { wrap.innerHTML = '<div class="empty">No readings yet.</div>'; return; }
+    wrap.innerHTML = r.meters.map(m => {
+      const posted = m.BillToLedger === true || m.BillToLedger === 'TRUE' || m.BillToLedger === 'true';
+      const photo = m.Photo ? `<a class="photo-link" href="${esc(m.Photo)}" target="_blank">📷 photo</a>` : '';
+      return `<div class="list-item">
+        <div class="li-main">
+          <div class="li-title">Unit ${esc(m.Unit)} · ${esc(m.Type)} ${posted ? '<span class="badge paid">Posted</span>' : '<span class="badge pending">Unposted</span>'}</div>
+          <div class="li-sub">${esc(m.Date)} · ${Number(m.Consumption).toFixed(2)} units @ ${peso(m.Rate)} ${photo ? ' · ' + photo : ''}</div>
+        </div>
+        <div class="li-right">
+          <div class="li-amt">${peso(m.Amount)}</div>
+          ${!posted ? `<button class="btn sm success" style="min-height:32px;padding:0 10px;margin-top:4px;" onclick="postExistingMeter('${esc(m.ReadingID)}','${esc(m.Unit)}')">Post</button>` : ''}
+        </div>
+      </div>`;
+    }).join('');
+  });
+}
+function postExistingMeter(readingId, unit) {
+  apiGet('getTenantByUnit', { unit }).then(r => {
+    if (!r.ok) { toast(r.error || 'No tenant for this unit', 'error'); return; }
+    if (!confirm('Post this charge to ' + r.tenant.name + ' (' + unit + ')?')) return;
+    apiPost({ action: 'postMeterCharge', readingId, tenantId: r.tenant.tenantId }).then(rr => {
+      if (!rr.ok) { toast(rr.error || 'Failed', 'error'); return; }
+      toast('Charge posted', 'success');
+      loadMeters();
+    });
+  });
+}
+
+// ============================================================================
+// PENDING
+// ============================================================================
+function loadPending() {
+  document.getElementById('pendingList').innerHTML = '<div class="empty">Loading…</div>';
+  apiGet('getPending').then(r => {
+    if (!r.ok) { toast(r.error || 'Failed', 'error'); return; }
+    state.pending = r.pending;
+    const wrap = document.getElementById('pendingList');
+    const pendingOnly = r.pending.filter(p => p.Status === 'Pending');
+    if (pendingOnly.length === 0) { wrap.innerHTML = '<div class="empty">No pending submissions.</div>'; return; }
+    wrap.innerHTML = pendingOnly.map(p => `<div class="list-item" onclick='openPendingReview(${JSON.stringify(p).replace(/'/g,"&apos;")})'>
+      <div class="li-main">
+        <div class="li-title">Unit ${esc(p.Unit)} · ${esc(p.Name)}</div>
+        <div class="li-sub">${esc(p.Month)} · ${esc(p.Mode)} · ${esc(p.Timestamp)}</div>
+      </div>
+      <div class="li-right">
+        <div class="li-amt">${peso(p.Amount)}</div>
+        <span class="badge pending">Pending</span>
+      </div>
+    </div>`).join('');
+  });
+}
+function openPendingReview(p) {
+  state.curPending = p;
+  const row = (l, v) => `<div style="display:flex;justify-content:space-between;padding:3px 0;font-size:13px;"><span style="color:var(--muted);">${l}</span><span>${v}</span></div>`;
+  document.getElementById('prSummary').innerHTML =
+    row('Tenant', esc(p.Name)) +
+    row('Unit', esc(p.Unit)) +
+    row('Amount', '<b>' + peso(p.Amount) + '</b>') +
+    row('Mode', esc(p.Mode)) +
+    row('Month', esc(p.Month)) +
+    row('Submitted', esc(p.Timestamp)) +
+    (p.Remarks ? row('Remarks', esc(p.Remarks)) : '');
+  document.getElementById('prProofWrap').innerHTML = p.ProofURL
+    ? `<a class="photo-link" href="${esc(p.ProofURL)}" target="_blank">📷 View proof of payment</a>`
+    : '<div style="color:var(--muted);font-size:12px;">No proof attached.</div>';
+  document.getElementById('prRent').value = p.Amount;
+  document.getElementById('prElec').value = '0';
+  document.getElementById('prWater').value = '0';
+  document.getElementById('prShared').value = '0';
+  document.getElementById('prNote').value = '';
+  openModal('modalPendingReview');
+}
+function reviewPending(kind) {
+  if (!state.curPending) return;
+  const id = state.curPending.ID;
+  const btnId = kind === 'approve' ? 'prApproveBtn' : 'prRejectBtn';
+  if (kind === 'reject') {
+    if (!confirm('Reject this submission?')) return;
+    withSpinner(btnId, () => apiPost({ action: 'rejectPending', id, note: document.getElementById('prNote').value })).then(r => {
+      if (!r.ok) { toast(r.error || 'Failed', 'error'); return; }
+      toast('Rejected', 'success');
+      closeModal('modalPendingReview');
+      loadPending();
+    });
+  } else {
+    withSpinner(btnId, () => apiPost({
+      action: 'approvePending', id,
+      rentPaid:    parseFloat(document.getElementById('prRent').value)   || 0,
+      electricPaid:parseFloat(document.getElementById('prElec').value)   || 0,
+      waterPaid:   parseFloat(document.getElementById('prWater').value)  || 0,
+      sharedUtil:  parseFloat(document.getElementById('prShared').value) || 0,
+      note: document.getElementById('prNote').value
+    })).then(r => {
+      if (!r.ok) { toast(r.error || 'Failed', 'error'); return; }
+      toast('Approved', 'success');
+      closeModal('modalPendingReview');
+      if (r.smsText) {
+        state.lastSmsText = r.smsText;
+        document.getElementById('smsBalLine').textContent = 'New balance: ' + peso(r.balance);
+        document.getElementById('smsBody').textContent = r.smsText;
+        openModal('modalSms');
+      }
+      loadPending();
+    });
+  }
+}
+
+// ============================================================================
+// BOOT
+// ============================================================================
+(function boot() {
+  apiGet('getConfig').then(r => { if (r.ok) state.config = r.config || {}; });
+  loadDashboard();
+})();
+</script>
+</body>
+</html>
